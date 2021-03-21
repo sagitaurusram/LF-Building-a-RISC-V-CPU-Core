@@ -85,7 +85,9 @@
    $rd_valid  = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr ;
   
   
-    
+   $result[31:0] = $is_addi ? $src1_value + $imm :
+                   $is_add  ? $src1_value + $src2_value :
+                   32'b0;
 
    
    $dec_bits[10:0] = { $funct7[5],$funct3,$opcode};
@@ -96,7 +98,7 @@
    *failed = *cyc_cnt > M4_MAX_CYC;
    
    //`BOGUS_USE($rd $rd_valid $rs1 $rs1_valid ...) 
-   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $wr_data[31:0], $rs1_valid, $rs1[4:0], $src1_value, $rs2_valid, $rs2[4:0], $src2_value)
+   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $result, $rs1_valid, $rs1[4:0], $src1_value, $rs2_valid, $rs2[4:0], $src2_value)
    
  
    //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
