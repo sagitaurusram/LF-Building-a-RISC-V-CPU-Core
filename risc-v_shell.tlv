@@ -46,11 +46,12 @@
    
    // YOUR CODE HERE
    $pc[31:0]       = $reset ? 32'b0 : >>1$next_pc[31:0];
-   $next_pc[31:0]  = $pc + 32'h0000_0001;
+   $next_pc[31:0]  = $taken_br ? $br_tgt_pc[31:0] : $pc + 32'h0000_0004;
    
    `READONLY_MEM($pc, $$instr[31:0])
    
-   $is_r_instr = $instr[6:2] == 5'b00101 || $instr[6:2] == 5'b01101;
+   $is_r_instr = $instr[6:2] == 5'b01011 || $instr[6:2] == 5'b01100 ||
+                 $instr[6:2] == 5'b01110 || $instr[6:2] == 5'b10100 ;
    $is_i_instr = $instr[6:2] == 5'b00000 || $instr[6:2] == 5'b00001 || 
                  $instr[6:2] == 5'b00100 || $instr[6:2] == 5'b00110 ||
                  $instr[6:2] == 5'b11001 ;
@@ -82,7 +83,7 @@
    $imm_valid = $is_i_instr || $is_s_instr || $is_b_instr || $is_u_instr || $is_j_instr;           
    
    $rd[4:0]   = $instr[11:7];
-   $rd_valid  = $rd == 0 ? 0 : ( $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr );
+   $rd_valid  = $rd == 0 ? 0 : ( $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr );
    
   
   
@@ -101,6 +102,16 @@
    $is_bgeu        = $dec_bits ==? 11'bx_111_1100011;
    $is_addi        = $dec_bits ==? 11'bx_000_0010011;
    $is_add         = $dec_bits ==? 11'b0_000_0110011;
+   
+   $taken_br       = $is_beq    ? ( $src1_value == $src2_value ) :
+                     $is_bne    ? ( $src1_value != $src2_value ) :
+                     $is_blt    ? ( $src1_value <  $src2_value ) ^ ( $src1_value[31] != $src2_value[31] ) :
+                     $is_bge    ? ( $src1_value <= $src2_value ) ^ ( $src1_value[31] != $src2_value[31] ) :
+                     $is_bltu   ? ( $src1_value <  $src2_value ) :
+                     $is_bgeu   ? ( $src1_value >= $src2_value ) :
+                     0 ;
+                     
+   $br_tgt_pc[31:0] = $pc + $imm;
    
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = 1'b0;
